@@ -14,17 +14,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 1. Instalar Go, Clonar y Compilar
+      - name: Compilar y Publicar Release Automáticamente
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # 1. Instalar Go
           sudo apt-get update
           sudo apt-get install -y golang-go
           go version
 
-          # Clonar el repositorio en una carpeta temporal limpia
+          # 2. Clonar el repositorio en una carpeta temporal
           git clone https://github.com/cynchro/antigravity-es.git src_repo
           cd src_repo
 
-          # Preparar la carpeta de distribución
+          # 3. Inicializar módulo y compilar
           mkdir -p dist
           go mod init antigravity-es || true
 
@@ -37,19 +40,12 @@ jobs:
           echo "Compilando para macOS..."
           GOOS=darwin GOARCH=arm64 go build -o dist/antigravity-es-macos
 
-          # Mover los binarios compilados a la raíz para el siguiente paso
-          mv dist ..
-
-      - name: 2. Publicar Release en GitHub
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
+          # 4. Crear el Release directamente usando el repositorio explícito
           TAG="v1.0.$(date +%Y%m%d%H%M%S)"
-          
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          echo "Publicando Release $TAG..."
           
           gh release create "$TAG" dist/* \
+            --repo cynchro/antigravity-es \
             --title "Antigravity ES $TAG" \
             --notes "Binarios compilados automáticamente en español sin dependencias externas." \
             --latest
