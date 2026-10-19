@@ -28,13 +28,13 @@ jobs:
           go mod init antigravity-es || true
           
           echo "Compilando para Linux..."
-          GOOS=linux GOARCH=amd64 go build -o dist/antigravity-es-linux main.go
+          GOOS=linux GOARCH=amd64 go build -o dist/antigravity-es-linux
           
           echo "Compilando para Windows..."
-          GOOS=windows GOARCH=amd64 go build -o dist/antigravity-es-windows.exe main.go
+          GOOS=windows GOARCH=amd64 go build -o dist/antigravity-es-windows.exe
           
           echo "Compilando para macOS..."
-          GOOS=darwin GOARCH=arm64 go build -o dist/antigravity-es-macos main.go
+          GOOS=darwin GOARCH=arm64 go build -o dist/antigravity-es-macos
           
           ls -la dist/
 
