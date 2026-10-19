@@ -14,16 +14,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Instalar Go
+      - name: 1. Instalar Go
         run: |
           sudo apt-get update
           sudo apt-get install -y golang-go
           go version
 
-      - name: Compilar para Linux, Windows y macOS
+      - name: 2. Compilar binarios
         run: |
           mkdir -p dist
-          
           echo "Compilando para Linux..."
           GOOS=linux GOARCH=amd64 go build -o dist/antigravity-es-linux main.go
           
@@ -35,18 +34,16 @@ jobs:
           
           ls -la dist/
 
-      - name: Publicar Release Automático con los Binarios
+      - name: 3. Publicar Release en GitHub
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v1.0.$(date +%Y%m%d%H%M%S)"
           
-          # Asegurar configuración básica de git si fuera necesario
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          echo "Creando release $TAG..."
           gh release create "$TAG" dist/* \
             --title "Antigravity ES $TAG" \
-            --notes "Binarios compilados automáticamente en español sin dependencias externas." \
+            --notes "Binarios compilados automáticamente en español." \
             --latest
