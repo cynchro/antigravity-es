@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write # Necesario para crear el Release automáticamente
+  contents: write
 
 jobs:
   build:
@@ -14,13 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clonar repositorio y preparar entorno
+      - name: Instalar Go
         run: |
-          # Clonar el repositorio actual de forma limpia
-          git clone https://github.com/cynchro/antigravity-es.git .
-          
-          # Instalar Go de forma nativa en el servidor de ejecución
-          sudo apt-get update && sudo apt-get install -y golang-go
+          sudo apt-get update
+          sudo apt-get install -y golang-go
           go version
 
       - name: Compilar para Linux, Windows y macOS
@@ -44,7 +41,6 @@ jobs:
         run: |
           TAG="v1.0.$(date +%Y%m%d%H%M%S)"
           
-          # Crear un Release en GitHub y subir los ejecutables directamente usando la CLI integrada (gh)
           gh release create "$TAG" dist/* \
             --title "Antigravity ES $TAG" \
             --notes "Binarios compilados automáticamente en español sin dependencias externas."
