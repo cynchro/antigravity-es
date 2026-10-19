@@ -14,31 +14,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 1. Instalar Go
+      - name: 1. Instalar Go, Clonar y Compilar
         run: |
           sudo apt-get update
           sudo apt-get install -y golang-go
           go version
 
-      - name: 2. Inicializar Módulo y Compilar Binarios
-        run: |
+          # Clonar el repositorio en una carpeta temporal limpia
+          git clone https://github.com/cynchro/antigravity-es.git src_repo
+          cd src_repo
+
+          # Preparar la carpeta de distribución
           mkdir -p dist
-          
-          # Inicializar el módulo de Go si no existe
           go mod init antigravity-es || true
-          
+
           echo "Compilando para Linux..."
           GOOS=linux GOARCH=amd64 go build -o dist/antigravity-es-linux
-          
+
           echo "Compilando para Windows..."
           GOOS=windows GOARCH=amd64 go build -o dist/antigravity-es-windows.exe
-          
+
           echo "Compilando para macOS..."
           GOOS=darwin GOARCH=arm64 go build -o dist/antigravity-es-macos
-          
-          ls -la dist/
 
-      - name: 3. Publicar Release en GitHub
+          # Mover los binarios compilados a la raíz para el siguiente paso
+          mv dist ..
+
+      - name: 2. Publicar Release en GitHub
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
