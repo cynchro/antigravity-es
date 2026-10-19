@@ -41,6 +41,12 @@ jobs:
         run: |
           TAG="v1.0.$(date +%Y%m%d%H%M%S)"
           
+          # Asegurar configuración básica de git si fuera necesario
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          echo "Creando release $TAG..."
           gh release create "$TAG" dist/* \
             --title "Antigravity ES $TAG" \
-            --notes "Binarios compilados automáticamente en español sin dependencias externas."
+            --notes "Binarios compilados automáticamente en español sin dependencias externas." \
+            --latest
