@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,10 +11,8 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
-	"encoding/json"
 )
 
-// Diccionario estático para traducciones instantáneas de comandos y términos del CLI
 var diccionarioEstatico = map[string]string{
 	"Usage:":                      "Uso:",
 	"Options:":                    "Opciones:",
@@ -28,7 +27,6 @@ var diccionarioEstatico = map[string]string{
 	"Help:":                       "Ayuda:",
 }
 
-// Mapeo de comandos en español hacia inglés para el CLI original
 var mapeoComandos = map[string]string{
 	"iniciar":   "start",
 	"agentes":   "agents",
@@ -38,10 +36,6 @@ var mapeoComandos = map[string]string{
 	"ayuda":     "--help",
 }
 
-// Estructura para respuesta de Google Translate API gratuita
-type autoTranslateResponse [][]interface{}
-
-// Función de traducción dinámica en caso de frases largas no presentes en el diccionario
 func traducirConAPI(texto string) string {
 	if strings.TrimSpace(texto) == "" {
 		return texto
@@ -50,7 +44,7 @@ func traducirConAPI(texto string) string {
 	apiURL := fmt.Sprintf("https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=%s", url.QueryEscape(texto))
 	resp, err := http.Get(apiURL)
 	if err != nil {
-		return texto // Si no hay internet o falla la red, regresa el texto original
+		return texto
 	}
 	defer resp.Body.Close()
 
@@ -59,29 +53,30 @@ func traducirConAPI(texto string) string {
 		return texto
 	}
 
-	var parsed autoTranslateResponse
+	// Estructura segura para parsear el JSON de la API de traducción
+	var parsed []interface{}
 	if err := json.Unmarshal(body, &parsed); err == nil && len(parsed) > 0 {
-		var resultado strings.Builder
-		for _, item := range parsed[0] {
-			if len(item) > 0 {
-				if str, ok := item[0].(string); ok {
-					resultado.WriteString(str)
+		if sentences, ok := parsed[0].([]interface{}); ok {
+			var resultado strings.Builder
+			for _, s := range sentences {
+				if sentenceParts, ok := s.([]interface{}); ok && len(sentenceParts) > 0 {
+					if str, ok := sentenceParts[0].(string); ok {
+						resultado.WriteString(str)
+					}
 				}
 			}
-		}
-		if resultado.Len() > 0 {
-			return resultado.String()
+			if resultado.Len() > 0 {
+				return resultado.String()
+			}
 		}
 	}
 
 	return texto
 }
 
-// Procesa y traduce cada línea enviada por el CLI
 func procesarLinea(linea string) string {
 	textoProcesado := linea
 
-	// 1. Reemplazos rápidos del diccionario estático
 	for en, es := range diccionarioEstatico {
 		if strings.Contains(textoProcesado, en) {
 			re := regexp.MustCompile("(?i)" + regexp.QuoteMeta(en))
@@ -89,12 +84,10 @@ func procesarLinea(linea string) string {
 		}
 	}
 
-	// 2. Si la línea cambió con el diccionario estático, devolverla de inmediato
 	if textoProcesado != linea {
 		return textoProcesado
 	}
 
-	// 3. Traducción dinámica para bloques de texto o explicaciones del agente
 	if len(strings.TrimSpace(linea)) > 3 {
 		return traducirConAPI(linea)
 	}
@@ -106,7 +99,6 @@ func main() {
 	argsOriginales := os.Args[1:]
 	argsTraducidos := make([]string, len(argsOriginales))
 
-	// Traducir los comandos que el usuario escriba en español a inglés
 	for i, arg := range argsOriginales {
 		if trad, ok := mapeoComandos[strings.ToLower(arg)]; ok {
 			argsTraducidos[i] = trad
@@ -115,18 +107,15 @@ func main() {
 		}
 	}
 
-	// Invocar el ejecutable nativo de Google Antigravity
 	cmd := exec.Command("antigravity", argsTraducidos...)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Printf("Error al conectar stdout: %v\n", err)
 		os.Exit(1)
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		fmt.Printf("Error al conectar stderr: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -135,7 +124,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Escuchar stdout
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
@@ -143,7 +131,6 @@ func main() {
 		}
 	}()
 
-	// Escuchar stderr
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
