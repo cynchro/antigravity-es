@@ -20,9 +20,13 @@ jobs:
           sudo apt-get install -y golang-go
           go version
 
-      - name: 2. Compilar binarios
+      - name: 2. Inicializar Módulo y Compilar Binarios
         run: |
           mkdir -p dist
+          
+          # Inicializar el módulo de Go si no existe
+          go mod init antigravity-es || true
+          
           echo "Compilando para Linux..."
           GOOS=linux GOARCH=amd64 go build -o dist/antigravity-es-linux main.go
           
@@ -45,5 +49,5 @@ jobs:
           
           gh release create "$TAG" dist/* \
             --title "Antigravity ES $TAG" \
-            --notes "Binarios compilados automáticamente en español." \
+            --notes "Binarios compilados automáticamente en español sin dependencias externas." \
             --latest
