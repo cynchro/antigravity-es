@@ -77,6 +77,7 @@ func traducirConAPI(texto string) string {
 func procesarLinea(linea string) string {
 	textoProcesado := linea
 
+	// 1. Buscar primero en el diccionario estático de términos conocidos
 	for en, es := range diccionarioEstatico {
 		if strings.Contains(textoProcesado, en) {
 			re := regexp.MustCompile("(?i)" + regexp.QuoteMeta(en))
@@ -84,11 +85,13 @@ func procesarLinea(linea string) string {
 		}
 	}
 
+	// Si el diccionario estático hizo un cambio exacto, lo devolvemos
 	if textoProcesado != linea {
 		return textoProcesado
 	}
 
-	if len(strings.TrimSpace(linea)) > 3 {
+	// 2. Si hay texto real, lo enviamos a la API de traducción (eliminamos el filtro de > 3 caracteres)
+	if strings.TrimSpace(linea) != "" {
 		return traducirConAPI(linea)
 	}
 
