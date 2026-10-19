@@ -14,17 +14,23 @@ import (
 )
 
 var diccionarioEstatico = map[string]string{
-	"Usage:":                      "Uso:",
-	"Options:":                    "Opciones:",
-	"Commands:":                   "Comandos:",
-	"Global Options:":             "Opciones Globales:",
-	"Starting agent...":          "Iniciando agente...",
-	"Agent running":               "Agente en ejecución",
+	"Usage:":                    "Uso:",
+	"Options:":                  "Opciones:",
+	"Commands:":                 "Comandos:",
+	"Global Options:":           "Opciones Globales:",
+	"Starting agent...":        "Iniciando agente...",
+	"Agent running":             "Agente en ejecución",
 	"Task completed successfully": "Tarea completada con éxito",
-	"Failed to execute":           "Error al ejecutar",
-	"Error:":                      "Error:",
-	"Warning:":                    "Advertencia:",
-	"Help:":                       "Ayuda:",
+	"Failed to execute":         "Error al ejecutar",
+	"Error:":                    "Error:",
+	"Warning:":                  "Advertencia:",
+	"Help:":                     "Ayuda:",
+	// Nuevas frases del CLI de Antigravity:
+	"Requesting permission for:": "Solicitando permiso para:",
+	"Run this command?":          "¿Ejecutar este comando?",
+	"Yes, run command":           "Sí, ejecutar comando",
+	"No, cancel":                 "No, cancelar",
+	"Thought for":                "Pensando durante",
 }
 
 var mapeoComandos = map[string]string{
