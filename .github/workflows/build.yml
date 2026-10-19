@@ -3,45 +3,48 @@ name: Compilar Binarios Nativos
 on:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Permite ejecutarlo manualmente desde la interfaz web de GitHub
+  workflow_dispatch:
+
+permissions:
+  contents: write # Necesario para crear el Release automáticamente
 
 jobs:
   build:
-    name: Compilar para ${{ matrix.os }}
+    name: Compilar y Publicar Binarios
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - os: linux
-            goos: linux
-            goarch: amd64
-            output: antigravity-es-linux
-          - os: windows
-            goos: windows
-            goarch: amd64
-            output: antigravity-es-windows.exe
-          - os: macos
-            goos: darwin
-            goarch: arm64
-            output: antigravity-es-macos
 
     steps:
-      - name: Clonar repositorio
-        uses: actions/checkout@v4
+      - name: Clonar repositorio y preparar entorno
+        run: |
+          # Clonar el repositorio actual de forma limpia
+          git clone https://github.com/cynchro/antigravity-es.git .
+          
+          # Instalar Go de forma nativa en el servidor de ejecución
+          sudo apt-get update && sudo apt-get install -y golang-go
+          go version
 
-      - name: Configurar Go en la nube
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
+      - name: Compilar para Linux, Windows y macOS
+        run: |
+          mkdir -p dist
+          
+          echo "Compilando para Linux..."
+          GOOS=linux GOARCH=amd64 go build -o dist/antigravity-es-linux main.go
+          
+          echo "Compilando para Windows..."
+          GOOS=windows GOARCH=amd64 go build -o dist/antigravity-es-windows.exe main.go
+          
+          echo "Compilando para macOS..."
+          GOOS=darwin GOARCH=arm64 go build -o dist/antigravity-es-macos main.go
+          
+          ls -la dist/
 
-      - name: Compilar binario
+      - name: Publicar Release Automático con los Binarios
         env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-        run: go build -o ${{ matrix.output }} main.go
-
-      - name: Subir artefacto compilado
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.output }}
-          path: ${{ matrix.output }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v1.0.$(date +%Y%m%d%H%M%S)"
+          
+          # Crear un Release en GitHub y subir los ejecutables directamente usando la CLI integrada (gh)
+          gh release create "$TAG" dist/* \
+            --title "Antigravity ES $TAG" \
+            --notes "Binarios compilados automáticamente en español sin dependencias externas."
